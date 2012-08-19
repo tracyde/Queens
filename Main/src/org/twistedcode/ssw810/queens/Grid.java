@@ -47,12 +47,13 @@ public class Grid {
     }
 
     // This method uses back tracking to find solutions
+    // processes each row
     private void enumerate(int[] grid, int n) {
         int N = grid.length;
         if (n == N) {
             // Solution found, add to solutions collection
             solutions.add(grid);
-            // printGrid(grid);
+            //printGrid(grid);
         } else {
             for (int i = 0; i < N; i++) {
                 grid[n] = i;
@@ -83,7 +84,7 @@ public class Grid {
      *  Main method to test class with
      */
     public static void main(String[] args) {
-        Grid grid = new Grid(15);
+        Grid grid = new Grid(14);
         long startTime = System.currentTimeMillis();
 
         grid.generateGrids();
