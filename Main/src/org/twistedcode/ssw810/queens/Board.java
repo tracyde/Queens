@@ -22,25 +22,33 @@ public class Board extends JPanel {
     }
 
     public Board(int size) {
-        setLayout(new GridLayout(size,size));
-        setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
+//        setLayout(new GridLayout(size,size));
+        setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+//        c.gridwidth = size;
+//        c.gridheight = size;
+//        c.gridx = 0;
+//        c.gridy = 0;
+
+        setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
         boolean flag = true;
 
-        for (int x = 0; x < size; x++)
-        {
+        for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
-                JPanel pan = new JPanel();
-                pan.setPreferredSize(new Dimension(30,30));
-                pan.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                JPanel panel = new JPanel();
+                panel.setPreferredSize(new Dimension(30, 30));
+                //panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-                if (flag){
-                    pan.setBackground(square1);
+                if (flag) {
+                    panel.setBackground(square1);
                     flag = !flag;
                 } else {
-                    pan.setBackground(square2);
+                    panel.setBackground(square2);
                     flag = !flag;
                 }
-                add(pan);
+                c.gridx = x;
+                c.gridy = y;
+                add(panel, c);
             }
 
             flag = !flag;

@@ -2,7 +2,10 @@ package org.twistedcode.ssw810.queens;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -14,19 +17,32 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Broker {
     private AtomicInteger total;
-    private Map<Integer, int[]> solutions;
+    private BlockingQueue<int[]> solutions;
+    private AtomicBoolean finished;
 
-    public void addSolution(int[] grid) {
-        solutions.put(total.getAndIncrement(), grid);
+    public void addSolution(int[] grid, boolean countOnly) {
+        total.incrementAndGet();
+        if (!countOnly) {
+            try {
+                solutions.put(grid);
+            } catch (InterruptedException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+    }
+
+    public Boolean isFinished() {
+        return finished.get();
     }
 
     public Broker() {
         this.total = new AtomicInteger(0);
-        this.solutions = new ConcurrentHashMap<>();
+//        this.solutions = new ConcurrentHashMap<>();
+        this.solutions = new ArrayBlockingQueue<int[]>(1);
     }
 
     public int totalSolutions() {
-        return solutions.size();
+        return total.get();
     }
 
     private static void printGrid(int[] grid) {
@@ -44,20 +60,20 @@ public class Broker {
         System.out.println();
     }
 
-    public void printSolutions() {
-        for (int[] grid : solutions.values()) {
-            printGrid(grid);
-        }
-    }
+//    public void printSolutions() {
+//        for (int[] grid : solutions.values()) {
+//            printGrid(grid);
+//        }
+//    }
 
-    public boolean hasValue(Integer idx) {
-        return solutions.containsKey(idx);
-    }
+//    public boolean hasValue(Integer idx) {
+//        return solutions.containsKey(idx);
+//    }
 
-    public int[] getValue(Integer idx) {
-        if (solutions.containsKey(idx))
-            return solutions.get(idx);
-        else
-            return null;
-    }
+//    public int[] getValue(Integer idx) {
+//        if (solutions.containsKey(idx))
+//            return solutions.get(idx);
+//        else
+//            return null;
+//    }
 }

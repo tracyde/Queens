@@ -17,11 +17,13 @@ public class QueensGrid extends RecursiveAction {
     private final int[] sofar;
     private QueensGrid nextSubtask; // to link subtasks
     private int solutions;
+    private final boolean countOnly;
 
-    public QueensGrid(Broker broker, int size, int[] array) {
+    public QueensGrid(Broker broker, int size, int[] array, boolean countOnly) {
         this.broker = broker;
         this.gridSize = size;
         this.sofar = array;
+        this.countOnly = countOnly;
     }
 
     @Override
@@ -29,7 +31,10 @@ public class QueensGrid extends RecursiveAction {
         QueensGrid subtasks;
         int gs = gridSize;
         if (sofar.length >= gs) {
-            broker.addSolution(sofar);
+            if (countOnly)
+                broker.addSolution(sofar, true);
+            else
+                broker.addSolution(sofar, false);
             solutions = 1;
         } else if ((subtasks = this.explore(sofar, gs)) != null) {
             solutions = this.processSubtasks(subtasks);
@@ -51,7 +56,7 @@ public class QueensGrid extends RecursiveAction {
                 first.fork();
             int[] next = Arrays.copyOf(array, row + 1);
             next[row] = q;
-            QueensGrid subtask = new QueensGrid(this.broker, gs, next);
+            QueensGrid subtask = new QueensGrid(this.broker, gs, next, this.countOnly);
             subtask.nextSubtask = first;
             qg = subtask;
         }
@@ -79,10 +84,11 @@ public class QueensGrid extends RecursiveAction {
     }
 
     public static void main(String[] args) {
-
+        final int gridSize = 8;
         final int minBoardSize = 8;
         final int maxBoardSize = 15;
 
+        // Broker is a blockingQueue so this will never finish
         Broker broker = new Broker();
 
         int[] expectedSolutions = new int[]{
@@ -93,11 +99,12 @@ public class QueensGrid extends RecursiveAction {
         final long NPS = (1000L * 1000L * 1000L);
 
         ForkJoinPool pool = new ForkJoinPool();
-        QueensGrid grid = new QueensGrid(broker, 16, new int[0]);
+        QueensGrid grid = new QueensGrid(broker, gridSize, new int[0], false);
 
         long start = System.nanoTime();
 
         pool.invoke(grid);
+
         int solutions = grid.solutions;
 
         long time = System.nanoTime() - start;
@@ -110,7 +117,7 @@ public class QueensGrid extends RecursiveAction {
         // Shutdown the threadpool
         pool.shutdown();
 
-        broker.printSolutions();
+        //broker.printSolutions();
         System.out.printf("QueensGrid %3d", grid.gridSize);
         System.out.printf(" Solutions %3d", solutions);
         System.out.printf(" Time: %7.3f", secs);
