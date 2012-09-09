@@ -6,6 +6,7 @@ import javax.swing.plaf.ProgressBarUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeListener;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -18,8 +19,10 @@ import java.util.concurrent.ForkJoinPool;
 public class Main implements ActionListener {
     private final Broker countBroker;
     private final Broker solutionsBroker;
-
-    private final Integer size;
+    private Board board;
+    private Integer size;
+    private int solutionsViewed;
+    private int[] solution;
     private final JFrame frame;
     private final JProgressBar progressBar;
     private final JLabel statusLabel;
@@ -27,7 +30,10 @@ public class Main implements ActionListener {
     private final JLabel viewLabel;
 
     private Main(Integer gridSize) {
+        System.out.println("Got here");
         this.size = gridSize;
+        this.solution = new int[this.size];
+
         countBroker = new Broker();
         solutionsBroker = new Broker();
 
@@ -42,8 +48,8 @@ public class Main implements ActionListener {
 
         // Create topPanel that holds a scrollPane and the Board
         JPanel topPanel = new JPanel(new BorderLayout());
-        Board board = new Board(size);
-        topPanel.add(board, BorderLayout.CENTER);
+        this.board = new Board(this.solution);
+        topPanel.add(this.board, BorderLayout.CENTER);
 
         frame.add(topPanel, BorderLayout.NORTH);
 
@@ -57,6 +63,25 @@ public class Main implements ActionListener {
         JPanel buttonPanel = new JPanel(new GridLayout(2, 2));
         JButton acceptButton = new JButton("Accept");
         JButton nextButton = new JButton("Next");
+        ActionListener nextListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (solutionsBroker.solutionFound()) {
+                    try {
+                        int[] solution = solutionsBroker.getSolution();
+                        printGrid(solution);
+                        board.update(solution);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    frame.repaint();
+                    solutionsViewed++;
+                    updateViewLabel();
+                }
+            }
+        };
+        nextButton.addActionListener(nextListener);
+
         JButton pauseExitButton = new JButton("");
         buttonPanel.add(acceptButton);
         buttonPanel.add(nextButton);
@@ -95,13 +120,27 @@ public class Main implements ActionListener {
             public void run() {
                 ForkJoinPool pool = new ForkJoinPool();
                 QueensGrid grid = new QueensGrid(countBroker, size, new int[0], true);
-                updateStatusLabel("Counting Solutions...");
+                updateStatusLabel("Started counting solutions...");
                 pool.invoke(grid);
                 pool.shutdown();
                 updateStatusLabel("Done counting solutions.");
             }
         };
         countThread.start();
+
+        // Run computeSolutions to update progressBar and status
+        Thread solutionThread = new Thread() {
+            @Override
+            public void run() {
+                ForkJoinPool pool = new ForkJoinPool();
+                QueensGrid grid = new QueensGrid(solutionsBroker, size, new int[0], false);
+                updateStatusLabel("Started computing solutions...");
+                pool.invoke(grid);
+                pool.shutdown();
+                updateStatusLabel("Finished computing solutions.");
+            }
+        };
+        solutionThread.start();
 
         int speed = 100;
         int pause = 2000;
@@ -136,7 +175,7 @@ public class Main implements ActionListener {
 
     private void updateViewLabel() {
         // ToDo implement update logic
-        final String text = "Solutions Viewed: 0";
+        final String text = "Solutions Viewed: " + solutionsViewed;
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -153,10 +192,29 @@ public class Main implements ActionListener {
         frame.repaint();
     }
 
+    // Suppressing the warning as I think it is easier to understand using the long
+    // for loop invocation
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    private static void printGrid(int[] grid) {
+        int N = grid.length;
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if (grid[i] == j) {
+                    System.out.print("Q ");
+                } else {
+                    System.out.print("* ");
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Main app = new Main(16);
+                Main app = new Main(8);
+                System.out.println("Got Here");
                 app.setVisible(true);
             }
         });

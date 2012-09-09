@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Broker {
     private AtomicInteger total;
     private BlockingQueue<int[]> solutions;
+    private AtomicBoolean solutionFound;
     private AtomicBoolean finished;
 
     public void addSolution(int[] grid, boolean countOnly) {
@@ -25,20 +26,31 @@ public class Broker {
         if (!countOnly) {
             try {
                 solutions.put(grid);
+                solutionFound.set(true);
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
         }
     }
 
+    public Boolean solutionFound() {
+        return solutionFound.get();
+    }
+
     public Boolean isFinished() {
         return finished.get();
     }
 
+    public int[] getSolution() throws InterruptedException {
+        solutionFound.set(false);
+        return solutions.take();
+    }
+
     public Broker() {
         this.total = new AtomicInteger(0);
-//        this.solutions = new ConcurrentHashMap<>();
-        this.solutions = new ArrayBlockingQueue<int[]>(1);
+        this.solutions = new ArrayBlockingQueue<>(1);
+        this.finished = new AtomicBoolean(false);
+        this.solutionFound = new AtomicBoolean(false);
     }
 
     public int totalSolutions() {
