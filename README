@@ -1,1 +1,5 @@
-This file was created by IntelliJ IDEA 11.1.3 for binding GitHub repository
+# NQueens ForkJoin and Swing #
+
+This is my implementation of the NQueens CS problem using Java's new ForkJoin threading model and Swing.
+
+This is one of my first Swing applications (and one of my first Java apps), feedback/corrections are welcome.
