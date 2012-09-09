@@ -28,7 +28,7 @@ public class Broker {
                 solutions.put(grid);
                 solutionFound.set(true);
             } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
         }
     }
@@ -71,21 +71,4 @@ public class Broker {
         }
         System.out.println();
     }
-
-//    public void printSolutions() {
-//        for (int[] grid : solutions.values()) {
-//            printGrid(grid);
-//        }
-//    }
-
-//    public boolean hasValue(Integer idx) {
-//        return solutions.containsKey(idx);
-//    }
-
-//    public int[] getValue(Integer idx) {
-//        if (solutions.containsKey(idx))
-//            return solutions.get(idx);
-//        else
-//            return null;
-//    }
 }

@@ -29,8 +29,10 @@ public class Main implements ActionListener {
     private final JLabel totalLabel;
     private final JLabel viewLabel;
 
-    private Main(Integer gridSize) {
-        System.out.println("Got here");
+    public Main(Integer gridSize) {
+        Thread countThread = null;
+        Thread solutionThread = null;
+
         this.size = gridSize;
         this.solution = new int[this.size];
 
@@ -60,8 +62,27 @@ public class Main implements ActionListener {
         progressPanel.add(progressBar, BorderLayout.CENTER);
         bottomPanel.add(progressBar, BorderLayout.NORTH);
 
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 2));
-        JButton acceptButton = new JButton("Accept");
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+        JButton exitButton = new JButton("Exit");
+        final Thread finalCountThread = countThread;
+        final Thread finalSolutionThread = solutionThread;
+        ActionListener exitListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateStatusLabel("Shutdown Requested...");
+                if (finalCountThread != null)
+                    if (finalCountThread.isAlive())
+                        finalCountThread.interrupt();
+
+                if (finalSolutionThread != null)
+                    if (finalSolutionThread.isAlive())
+                        finalSolutionThread.interrupt();
+
+                System.exit(0);
+            }
+        };
+        exitButton.addActionListener(exitListener);
+
         JButton nextButton = new JButton("Next");
         ActionListener nextListener = new ActionListener() {
             @Override
@@ -82,10 +103,8 @@ public class Main implements ActionListener {
         };
         nextButton.addActionListener(nextListener);
 
-        JButton pauseExitButton = new JButton("");
-        buttonPanel.add(acceptButton);
+        buttonPanel.add(exitButton);
         buttonPanel.add(nextButton);
-        buttonPanel.add(pauseExitButton);
         bottomPanel.add(buttonPanel, BorderLayout.WEST);
 
         JSeparator bottomSep = new JSeparator(JSeparator.VERTICAL);
@@ -115,7 +134,7 @@ public class Main implements ActionListener {
         frame.setVisible(true);
 
         // Run countSolutions to update progressBar and status
-        Thread countThread = new Thread() {
+        countThread = new Thread() {
             @Override
             public void run() {
                 ForkJoinPool pool = new ForkJoinPool();
@@ -124,12 +143,13 @@ public class Main implements ActionListener {
                 pool.invoke(grid);
                 pool.shutdown();
                 updateStatusLabel("Done counting solutions.");
+                setProgressBarMax(countBroker.totalSolutions());
             }
         };
         countThread.start();
 
         // Run computeSolutions to update progressBar and status
-        Thread solutionThread = new Thread() {
+        solutionThread = new Thread() {
             @Override
             public void run() {
                 ForkJoinPool pool = new ForkJoinPool();
@@ -155,11 +175,21 @@ public class Main implements ActionListener {
             @Override
             public void run() {
                 statusLabel.setText(statusText);
+                statusLabel.repaint();
             }
         });
     }
 
-    private void setVisible(boolean visible) {
+    private void setProgressBarMax(final int maxInt) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setMaximum(maxInt);
+            }
+        });
+    }
+
+    public void setVisible(boolean visible) {
         frame.setVisible(visible);
     }
 
@@ -180,6 +210,7 @@ public class Main implements ActionListener {
             @Override
             public void run() {
                 viewLabel.setText(text);
+                progressBar.setValue(solutionsViewed);
             }
         });
     }
@@ -211,12 +242,6 @@ public class Main implements ActionListener {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                Main app = new Main(8);
-                System.out.println("Got Here");
-                app.setVisible(true);
-            }
-        });
+        WelcomeDialog dlg = new WelcomeDialog("Welcome to NQueens");
     }
 }

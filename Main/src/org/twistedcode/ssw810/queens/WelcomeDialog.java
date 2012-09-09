@@ -12,22 +12,15 @@ import java.awt.event.ActionListener;
  * Time: 9:22 AM
  * To change this template use File | Settings | File Templates.
  */
-public class WelcomeDialog extends JDialog implements ActionListener {
+public class WelcomeDialog extends JFrame implements ActionListener {
 
-    private int queens;
-
-    public WelcomeDialog(Frame parent, String title) {
-        super(parent, title, true);
-        if (parent != null) {
-            Dimension parentSize = parent.getSize();
-            Point p = parent.getLocation();
-            setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
-        }
-
+    public WelcomeDialog(String title) {
+        super(title);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         JPanel messagePane = new JPanel();
         messagePane.add(new JLabel("How many Queens would you like?"));
 
-        Integer value = new Integer(0);
+        Integer value = new Integer(8);
         Integer min = new Integer(0);
         Integer max = new Integer(100);
         Integer step = new Integer(1);
@@ -45,7 +38,13 @@ public class WelcomeDialog extends JDialog implements ActionListener {
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                spinnerModel.getNumber().intValue();
+                setVisible(false);
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        Main app = new Main(spinnerModel.getNumber().intValue());
+                        app.setVisible(true);
+                    }
+                });
             }
         });
 
@@ -59,22 +58,6 @@ public class WelcomeDialog extends JDialog implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         setVisible(false);
         dispose();
-    }
-
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Queens");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setLayout(new FlowLayout());
-
-        //Board board = new Board(size);
-        //frame.add(board);
-
-        frame.setSize(500, 500);
-        frame.setResizable(false);
-        frame.setVisible(true);
-
-        WelcomeDialog dlg = new WelcomeDialog(frame, "Welcome to NQueens");
-
     }
 
 }
